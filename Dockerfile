@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends gcc
 
 # Install python dependencies in /.venv
 COPY Pipfile .
-RUN PIPENV_VENV_IN_PROJECT=1 pipenv install --deploy
+RUN PIPENV_VENV_IN_PROJECT=1 pipenv install
 
 FROM base AS runtime
 
