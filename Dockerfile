@@ -1,30 +1,24 @@
-FROM python:3.12-slim as base
+FROM python:3.12-slim
 
-# Setup env
+# 设置环境变量
 ENV LANG C.UTF-8
 ENV LC_ALL C.UTF-8
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONFAULTHANDLER 1
 
-FROM base AS python-deps
+# 设置工作目录
+WORKDIR /app
 
-# Install pipenv and compilation dependencies
-RUN pip install pipenv
-RUN apt-get update && apt-get install -y --no-install-recommends gcc
+# 安装编译所需的系统依赖
+RUN apt-get update && apt-get install -y --no-install-recommends gcc \
+    && rm -rf /var/lib/apt/lists/*
 
-# Install python dependencies in /.venv
-COPY Pipfile .
-RUN PIPENV_VENV_IN_PROJECT=1 pipenv install
+# 直接通过 pip 安装项目运行所需的所有依赖
+RUN pip install --no-cache-dir httpx[http2] requests beautifulsoup4 pyyaml rich pyjwt imaplib2
 
-FROM base AS runtime
-
-# Copy virtual env from python-deps stage
-COPY --from=python-deps /.venv /.venv
-ENV PATH="/.venv/bin:$PATH"
-
-# Install application into container
+# 复制项目所有源码到容器中
 COPY . .
 
-# Run the application
+# 容器启动时的默认执行命令
 ENTRYPOINT ["python", "src/main.py"]
-CMD ["--config", "/config/config.yaml"]
+CMD ["-c", "/config/config.yaml"]
